@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Penilaian UKT - PPS Betako Merpati Putih</title>
+    <title>E-UKT SYSTEM</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome Icons -->
@@ -77,7 +77,7 @@
             </nav>
             <button onclick="openCloudConfigModal()" id="cloudStatusBadge" title="Klik untuk mengatur koneksi Google Sheets Cloud" class="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition cursor-pointer">
                 <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-                <span>Mode Lokal (Atur Cloud)</span>
+                <span>Mode Lokal</span>
             </button>
         </div>
     </header>
@@ -188,10 +188,10 @@
                             <select id="memberLevel" onchange="updateActiveMemberMeta()" class="w-full px-3.5 py-2.5 text-sm font-medium bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-mp-red focus:border-mp-red outline-none">
                                 <option value="Dasar I">Dasar I (Sabuk Putih)</option>
                                 <option value="Dasar II">Dasar II (Sabuk Merah Polos)</option>
-                                <option value="Balik I">Balik I (Sabuk Merah Strip Putih 1)</option>
-                                <option value="Balik II">Balik II (Sabuk Merah Strip Putih 2)</option>
-                                <option value="Kombinasi I">Kombinasi I (Sabuk Merah Strip Kuning 1)</option>
-                                <option value="Kombinasi II">Kombinasi II (Sabuk Merah Strip Kuning 2)</option>
+                                <option value="Balik I">Balik I (Sabuk Merah Bet Kecil)</option>
+                                <option value="Balik II">Balik II (Sabuk Merah Strip Merah)</option>
+                                <option value="Kombinasi I">Kombinasi I (Sabuk Merah Strip Jingga)</option>
+                                <option value="Kombinasi II">Kombinasi II (Sabuk Merah Strip Kuning)</option>
                                 <option value="Khususan">Khususan</option>
                             </select>
                         </div>
@@ -421,7 +421,7 @@
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 py-4 mt-8 no-print">
         <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
-            Sistem Penilaian Digital Ujian Kenaikan Tingkat (UKT) &bull; <strong>Perguruan Pencak Silat Beladiri Tangan Kosong Merpati Putih</strong>
+            Sistem Penilaian Digital Ujian Kelayakan Kolat (UKK) &bull; <strong>Perguruan Pencak Silat Beladiri Tangan Kosong Merpati Putih</strong>
         </div>
     </footer>
 
@@ -432,7 +432,7 @@
             <div class="px-5 py-3.5 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-2 no-print">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-file-lines text-amber-400"></i>
-                    <span class="font-display font-bold text-sm sm:text-base">Blangko Resmi Penilaian UKT Merpati Putih</span>
+                    <span class="font-display font-bold text-sm sm:text-base">Blangko Resmi Penilaian UKK Merpati Putih</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <button onclick="downloadCurrentBlangkoPDF()" id="btnDownloadSinglePdf" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow">
@@ -454,7 +454,7 @@
                     <div>
                         <p class="text-xs font-bold tracking-widest uppercase text-mp-red">PERGURUAN PENCAK SILAT BELADIRI TANGAN KOSONG</p>
                         <h3 class="font-display font-extrabold text-xl sm:text-2xl tracking-tight text-slate-900">MERPATI PUTIH</h3>
-                        <p class="text-xs text-slate-600 font-medium">BLANGKO PENILAIAN UJIAN KENAIKAN TINGKAT (UKT)</p>
+                        <p class="text-xs text-slate-600 font-medium">BLANGKO PENILAIAN UJIAN KELAYAKAN kOLAT (UKK)</p>
                     </div>
                     <div class="text-right text-xs">
                         <span id="modalPrintBadge" class="inline-block px-3 py-1 rounded border font-bold uppercase"></span>
@@ -539,13 +539,13 @@
                 <div class="mt-6 grid grid-cols-2 gap-8 text-xs text-center">
                     <div>
                         <p class="text-slate-600">Mengetahui,</p>
-                        <p class="font-bold text-slate-800">Dewan Penguji / Ketua Cabang</p>
+                        <p class="font-bold text-slate-800">Dewan Penguji / Pembina</p>
                         <div class="h-14"></div>
                         <p class="font-semibold underline">( ........................................ )</p>
                     </div>
                     <div>
                         <p class="text-slate-600">Penguji Lapangan,</p>
-                        <p class="font-bold text-slate-800">Pelatih / Penguji UKT</p>
+                        <p class="font-bold text-slate-800">Penguji / Pelatih</p>
                         <div class="h-14"></div>
                         <p id="modalSignExaminer" class="font-bold underline">( ........................................ )</p>
                     </div>

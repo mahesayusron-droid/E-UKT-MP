@@ -1,0 +1,97 @@
+// ==================== KODE BACKEND GOOGLE APPS SCRIPT ====================
+// Salin seluruh kode ini ke dalam Google Sheets -> Ekstensi -> Apps Script
+
+const SHEET_NAME = 'Data_UKT_MP';
+
+function getOrCreateSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME);
+    sheet.appendRow([
+      'RecordID', 'WaktuInput', 'NamaPenguji', 'KolatPenguji', 'TanggalUjian',
+      'NamaAnggota', 'NoUjian', 'KolatAnggota', 'Tingkatan', 'MateriAktif',
+      'JumlahNilai', 'RataRataAkhir', 'ScoresJSON'
+    ]);
+    sheet.getRange(1, 1, 1, 13).setFontWeight('bold').setBackground('#dc2626').setFontColor('#ffffff');
+  }
+  return sheet;
+}
+
+function doGet(e) {
+  const sheet = getOrCreateSheet();
+  const data = sheet.getDataRange().getValues();
+  const records = [];
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (!row[0]) continue;
+    let parsedScores = [];
+    try {
+      parsedScores = JSON.parse(row[12]);
+    } catch (err) {
+      parsedScores = [];
+    }
+
+    records.unshift({
+      recordId: String(row[0]),
+      submittedAt: String(row[1]),
+      examinerName: String(row[2]),
+      examinerKolat: String(row[3]),
+      examDate: String(row[4]),
+      memberName: String(row[5]),
+      memberExamNo: String(row[6]),
+      memberKolat: String(row[7]),
+      memberLevel: String(row[8]),
+      activeCriteriaCount: Number(row[9]),
+      jumlahNilai: Number(row[10]),
+      finalAverage: Number(row[11]),
+      scores: parsedScores
+    });
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ status: 'success', data: records }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  const sheet = getOrCreateSheet();
+  const payload = JSON.parse(e.postData.contents);
+
+  if (payload.action === 'insert' && Array.isArray(payload.records)) {
+    payload.records.forEach(rec => {
+      sheet.appendRow([
+        rec.recordId,
+        rec.submittedAt,
+        rec.examinerName,
+        rec.examinerKolat,
+        rec.examDate,
+        rec.memberName,
+        rec.memberExamNo,
+        rec.memberKolat || '-',
+        rec.memberLevel,
+        rec.activeCriteriaCount,
+        rec.jumlahNilai,
+        rec.finalAverage,
+        JSON.stringify(rec.scores)
+      ]);
+    });
+  } else if (payload.action === 'delete' && payload.recordId) {
+    const data = sheet.getDataRange().getValues();
+    for (let i = data.length - 1; i >= 1; i--) {
+      if (String(data[i][0]) === String(payload.recordId)) {
+        sheet.deleteRow(i + 1);
+      }
+    }
+  } else if (payload.action === 'clearAll') {
+    const lastRow = sheet.getLastRow();
+    if (lastRow > 1) {
+      sheet.deleteRows(2, lastRow - 1);
+    }
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ status: 'success' }))
+    .setMimeType(ContentService.MimeType.JSON);
+}

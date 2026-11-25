@@ -15,6 +15,12 @@
             "PELEPASAN TANGKAP KUNCI"
         ];
 
+        // ==================== KONFIGURASI GOOGLE SHEETS CLOUD ====================
+        // Anda bisa menempelkan URL Web App di bawah ini ATAU langsung lewat tombol "Mode Lokal (Atur Cloud)" di website
+        const DEFAULT_GOOGLE_SHEET_API_URL = "";
+        const STORAGE_KEY_CLOUD_URL = 'mp_ukt_cloud_api_url_v1';
+        let GOOGLE_SHEET_API_URL = localStorage.getItem(STORAGE_KEY_CLOUD_URL) || DEFAULT_GOOGLE_SHEET_API_URL;
+
         const STORAGE_KEY_RECORDS = 'mp_ukt_submitted_records_v1';
         const STORAGE_KEY_DRAFT = 'mp_ukt_examiner_draft_v1';
         const STORAGE_KEY_KKM = 'mp_ukt_kkm_setting_v1';
@@ -40,6 +46,7 @@
                 id: 'P-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
                 name: '',
                 examNo: '',
+                kolat: '',
                 level: 'Dasar I',
                 scores: CRITERIA_LIST.map(() => [null, null, null, null]) // [unsur, stamina, koordinasi, kemantapan]
             };
@@ -82,6 +89,48 @@
             loadActiveParticipantIntoForm();
             updateAdminBadge();
             renderAdminDashboard();
+            updateCloudBadgeUI();
+
+            if (GOOGLE_SHEET_API_URL && GOOGLE_SHEET_API_URL.startsWith('https://')) {
+                syncFromGoogleSheets(false);
+            }
+        }
+
+        function updateCloudBadgeUI() {
+            const badge = document.getElementById('cloudStatusBadge');
+            if (!badge) return;
+            if (GOOGLE_SHEET_API_URL && GOOGLE_SHEET_API_URL.startsWith('https://')) {
+                badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span><span class="text-emerald-300 font-semibold">Cloud Online</span>';
+            } else {
+                badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400"></span><span>Mode Lokal (Atur Cloud)</span>';
+            }
+        }
+
+        function openCloudConfigModal() {
+            document.getElementById('cloudApiUrlInput').value = GOOGLE_SHEET_API_URL || '';
+            document.getElementById('cloudConfigModal').classList.remove('hidden');
+        }
+
+        function closeCloudConfigModal() {
+            document.getElementById('cloudConfigModal').classList.add('hidden');
+        }
+
+        function saveCloudApiUrl() {
+            const urlVal = document.getElementById('cloudApiUrlInput').value.trim();
+            if (urlVal && !urlVal.startsWith('https://script.google.com/')) {
+                showToast('URL tidak valid! Pastikan URL diawali https://script.google.com/ dan berakhiran /exec', 'error');
+                return;
+            }
+            GOOGLE_SHEET_API_URL = urlVal;
+            localStorage.setItem(STORAGE_KEY_CLOUD_URL, urlVal);
+            updateCloudBadgeUI();
+            closeCloudConfigModal();
+            if (urlVal) {
+                showToast('Koneksi Cloud disimpan! Menyinkronkan data...', 'success');
+                syncFromGoogleSheets(true);
+            } else {
+                showToast('Beralih ke Mode Lokal.', 'info');
+            }
         }
 
         // ==================== 3. NAVIGASI MODE (PENGUJI / ADMIN) ====================
@@ -102,6 +151,9 @@
                 tabAdmin.className = 'flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-mp-red text-white shadow';
                 tabPenguji.className = 'flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-300 hover:text-white';
                 renderAdminDashboard();
+                if (GOOGLE_SHEET_API_URL && GOOGLE_SHEET_API_URL.startsWith('https://')) {
+                    syncFromGoogleSheets(false);
+                }
             }
         }
 
@@ -247,6 +299,7 @@
             document.getElementById('activeSlotNumber').textContent = sessionState.activeIndex + 1;
             document.getElementById('memberName').value = p.name || '';
             document.getElementById('memberExamNo').value = p.examNo || '';
+            document.getElementById('memberKolat').value = p.kolat || '';
             document.getElementById('memberLevel').value = p.level || 'Dasar I';
 
             renderScoringTableRows(p.scores);
@@ -257,6 +310,7 @@
             const p = sessionState.participants[sessionState.activeIndex];
             p.name = document.getElementById('memberName').value;
             p.examNo = document.getElementById('memberExamNo').value;
+            p.kolat = document.getElementById('memberKolat').value;
             p.level = document.getElementById('memberLevel').value;
             saveSessionDraft();
             renderParticipantTabs();
@@ -400,6 +454,7 @@
             const p = sessionState.participants[sessionState.activeIndex];
             p.name = p.name || 'Ahmad Rizky Pratama';
             p.examNo = p.examNo || 'UKT-MP-001';
+            p.kolat = p.kolat || 'Kolat Kebayoran';
             p.level = 'Balik I';
             p.scores = sampleScores;
 
@@ -422,6 +477,85 @@
                     showToast('Form peserta aktif berhasil di-reset.', 'info');
                 }
             );
+        }
+
+        // ==================== SINKRONISASI CLOUD GOOGLE SHEETS ====================
+        async function pushRecordsToGoogleSheets(recordsArray) {
+            if (!GOOGLE_SHEET_API_URL || !GOOGLE_SHEET_API_URL.startsWith('https://')) return false;
+            try {
+                await fetch(GOOGLE_SHEET_API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'insert', records: recordsArray })
+                });
+                return true;
+            } catch (err) {
+                console.error('Gagal kirim ke Google Sheets:', err);
+                return false;
+            }
+        }
+
+        async function syncFromGoogleSheets(showNotification = true) {
+            if (!GOOGLE_SHEET_API_URL || !GOOGLE_SHEET_API_URL.startsWith('https://')) {
+                if (showNotification) {
+                    openCloudConfigModal();
+                    showToast('Silakan tempelkan URL Google Apps Script terlebih dahulu.', 'warning');
+                }
+                return;
+            }
+
+            const syncIcon = document.getElementById('syncIcon');
+            if (syncIcon) syncIcon.classList.add('fa-spin');
+
+            try {
+                const response = await fetch(GOOGLE_SHEET_API_URL + '?action=getAll&t=' + Date.now());
+                const result = await response.json();
+                if (result && result.status === 'success' && Array.isArray(result.data)) {
+                    submittedRecords = result.data;
+                    localStorage.setItem(STORAGE_KEY_RECORDS, JSON.stringify(submittedRecords));
+                    updateAdminBadge();
+                    renderAdminDashboard();
+                    if (showNotification) {
+                        showToast(`Berhasil sinkronisasi ${submittedRecords.length} data dari Google Sheets!`, 'success');
+                    }
+                }
+            } catch (err) {
+                console.error('Gagal mengambil data Google Sheets:', err);
+                if (showNotification) {
+                    showToast('Gagal terhubung ke Google Sheets. Periksa koneksi internet atau izin Apps Script.', 'error');
+                }
+            } finally {
+                if (syncIcon) syncIcon.classList.remove('fa-spin');
+            }
+        }
+
+        async function deleteRecordInGoogleSheets(recordId) {
+            if (!GOOGLE_SHEET_API_URL || !GOOGLE_SHEET_API_URL.startsWith('https://')) return;
+            try {
+                await fetch(GOOGLE_SHEET_API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'delete', recordId: recordId })
+                });
+            } catch (err) {
+                console.error('Gagal hapus di cloud:', err);
+            }
+        }
+
+        async function clearAllInGoogleSheets() {
+            if (!GOOGLE_SHEET_API_URL || !GOOGLE_SHEET_API_URL.startsWith('https://')) return;
+            try {
+                await fetch(GOOGLE_SHEET_API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'clearAll' })
+                });
+            } catch (err) {
+                console.error('Gagal bersihkan cloud:', err);
+            }
         }
 
         // ==================== 8. KIRIM DATA KE ADMIN ====================
@@ -457,6 +591,7 @@
                 examDate: examDate || new Date().toISOString().split('T')[0],
                 memberName: p.name.trim(),
                 memberExamNo: p.examNo.trim() || '-',
+                memberKolat: (p.kolat || '').trim() || '-',
                 memberLevel: p.level,
                 scores: JSON.parse(JSON.stringify(p.scores)),
                 activeCriteriaCount: metrics.activeCriteriaCount,
@@ -468,7 +603,18 @@
             localStorage.setItem(STORAGE_KEY_RECORDS, JSON.stringify(submittedRecords));
             updateAdminBadge();
 
-            showToast(`Nilai ${record.memberName} (Rata-rata: ${formatNumberID(record.finalAverage)}) berhasil dikirim ke Admin!`, 'success');
+            if (GOOGLE_SHEET_API_URL && GOOGLE_SHEET_API_URL.startsWith('https://')) {
+                showToast(`Mengirim nilai ${record.memberName} ke Cloud...`, 'info');
+                pushRecordsToGoogleSheets([record]).then(ok => {
+                    if (ok) {
+                        showToast(`Nilai ${record.memberName} (Rata-rata: ${formatNumberID(record.finalAverage)}) tersimpan di Cloud & Admin!`, 'success');
+                    } else {
+                        showToast(`Tersimpan lokal, namun gagal sinkron ke Cloud.`, 'warning');
+                    }
+                });
+            } else {
+                showToast(`Nilai ${record.memberName} (Rata-rata: ${formatNumberID(record.finalAverage)}) berhasil dikirim ke Admin!`, 'success');
+            }
         }
 
         function submitAllParticipants() {
@@ -482,7 +628,7 @@
                 return;
             }
 
-            let validCount = 0;
+            let validRecords = [];
             sessionState.participants.forEach((p, idx) => {
                 const metrics = calculateParticipantMetrics(p.scores);
                 if (p.name.trim() && metrics.activeCriteriaCount > 0) {
@@ -494,6 +640,7 @@
                         examDate: examDate || new Date().toISOString().split('T')[0],
                         memberName: p.name.trim(),
                         memberExamNo: p.examNo.trim() || '-',
+                        memberKolat: (p.kolat || '').trim() || '-',
                         memberLevel: p.level,
                         scores: JSON.parse(JSON.stringify(p.scores)),
                         activeCriteriaCount: metrics.activeCriteriaCount,
@@ -501,18 +648,30 @@
                         finalAverage: metrics.finalAverage
                     };
                     submittedRecords.unshift(record);
-                    validCount++;
+                    validRecords.push(record);
                 }
             });
 
-            if (validCount === 0) {
+            if (validRecords.length === 0) {
                 showToast('Tidak ada peserta valid yang siap dikirim. Pastikan Nama Anggota dan Nilai terisi.', 'error');
                 return;
             }
 
             localStorage.setItem(STORAGE_KEY_RECORDS, JSON.stringify(submittedRecords));
             updateAdminBadge();
-            showToast(`${validCount} data penilaian peserta berhasil dikirim ke Admin!`, 'success');
+
+            if (GOOGLE_SHEET_API_URL && GOOGLE_SHEET_API_URL.startsWith('https://')) {
+                showToast(`Mengirim ${validRecords.length} data ke Cloud...`, 'info');
+                pushRecordsToGoogleSheets(validRecords).then(ok => {
+                    if (ok) {
+                        showToast(`${validRecords.length} data penilaian berhasil tersimpan di Cloud & Admin!`, 'success');
+                    } else {
+                        showToast(`Tersimpan lokal, namun gagal sinkron ke Cloud.`, 'warning');
+                    }
+                });
+            } else {
+                showToast(`${validRecords.length} data penilaian peserta berhasil dikirim ke Admin!`, 'success');
+            }
         }
 
         // ==================== 9. DASHBOARD ADMIN & REKAPITULASI ====================
@@ -569,6 +728,7 @@
                 const isPassed = rec.finalAverage >= kkmThreshold;
                 const matchSearch = rec.memberName.toLowerCase().includes(searchQuery) ||
                                     rec.memberExamNo.toLowerCase().includes(searchQuery) ||
+                                    (rec.memberKolat || '').toLowerCase().includes(searchQuery) ||
                                     rec.examinerName.toLowerCase().includes(searchQuery);
                 const matchLevel = !filterLevel || rec.memberLevel === filterLevel;
                 const matchStatus = !filterStatus ||
@@ -594,7 +754,7 @@
                     <td class="py-3.5 px-4 font-semibold text-slate-500">${index + 1}</td>
                     <td class="py-3.5 px-4">
                         <div class="font-bold text-slate-900">${escapeHtml(rec.memberName)}</div>
-                        <div class="text-xs text-slate-500">No. Ujian: ${escapeHtml(rec.memberExamNo)}</div>
+                        <div class="text-xs text-slate-500">No. Ujian: ${escapeHtml(rec.memberExamNo)} &bull; Kolat: ${escapeHtml(rec.memberKolat || '-')}</div>
                     </td>
                     <td class="py-3.5 px-4">
                         <span class="inline-block px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200">
@@ -647,6 +807,7 @@
                 () => {
                     submittedRecords = submittedRecords.filter(r => r.recordId !== recordId);
                     localStorage.setItem(STORAGE_KEY_RECORDS, JSON.stringify(submittedRecords));
+                    deleteRecordInGoogleSheets(recordId);
                     updateAdminBadge();
                     renderAdminDashboard();
                     showToast('Data berhasil dihapus.', 'info');
@@ -662,6 +823,7 @@
                 () => {
                     submittedRecords = [];
                     localStorage.setItem(STORAGE_KEY_RECORDS, JSON.stringify(submittedRecords));
+                    clearAllInGoogleSheets();
                     updateAdminBadge();
                     renderAdminDashboard();
                     showToast('Seluruh data admin telah dibersihkan.', 'info');
@@ -677,7 +839,9 @@
 
             document.getElementById('modalMemberName').textContent = rec.memberName;
             document.getElementById('modalMemberNo').textContent = rec.memberExamNo;
+            document.getElementById('modalMemberKolat').textContent = rec.memberKolat || '-';
             document.getElementById('modalLevel').textContent = rec.memberLevel;
+            document.getElementById('modalHeaderKkm').textContent = formatNumberID(kkmThreshold);
             document.getElementById('modalExaminerName').textContent = rec.examinerName;
             document.getElementById('modalKolat').textContent = rec.examinerKolat;
             document.getElementById('modalDate').textContent = rec.examDate;
@@ -836,10 +1000,16 @@
                             <td style="padding:5px 8px; font-weight:700;">${escapeHtml(rec.examinerKolat)}</td>
                         </tr>
                         <tr>
-                            <td style="padding:5px 8px; color:#64748b;">Tingkatan:</td>
-                            <td style="padding:5px 8px; font-weight:700;">${escapeHtml(rec.memberLevel)}</td>
+                            <td style="padding:5px 8px; color:#64748b;">Kolat Anggota:</td>
+                            <td style="padding:5px 8px; font-weight:700;">${escapeHtml(rec.memberKolat || '-')}</td>
                             <td style="padding:5px 8px; color:#64748b;">Tanggal Ujian:</td>
                             <td style="padding:5px 8px; font-weight:700;">${escapeHtml(rec.examDate)}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:5px 8px; color:#64748b;">Tingkatan:</td>
+                            <td style="padding:5px 8px; font-weight:700;">${escapeHtml(rec.memberLevel)}</td>
+                            <td style="padding:5px 8px; color:#64748b;">Standar KKM:</td>
+                            <td style="padding:5px 8px; font-weight:700;">${formatNumberID(kkmThreshold)}</td>
                         </tr>
                     </table>
 
@@ -924,6 +1094,7 @@
                 'No',
                 'Nama Anggota',
                 'No Ujian',
+                'Kolat Anggota',
                 'Tingkatan',
                 'Nama Penguji',
                 'Kolat/Cabang',
@@ -941,6 +1112,7 @@
                     idx + 1,
                     `"${rec.memberName.replace(/"/g, '""')}"`,
                     `"${rec.memberExamNo.replace(/"/g, '""')}"`,
+                    `"${(rec.memberKolat || '-').replace(/"/g, '""')}"`,
                     `"${rec.memberLevel}"`,
                     `"${rec.examinerName.replace(/"/g, '""')}"`,
                     `"${rec.examinerKolat.replace(/"/g, '""')}"`,

@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-UKT MERPATI PUTIH</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- html2pdf.js untuk Export Langsung ke File PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        mp: {
+                            red: '#DC2626',
+                            darkred: '#991B1B',
+                            gold: '#F59E0B',
+                            dark: '#1E293B',
+                            darker: '#0F172A'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+    <!-- Header / Navbar -->
+    <header class="bg-mp-darker text-white shadow-lg border-b-4 border-mp-red sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
+            <!-- Brand Identity -->
+            <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+                <div class="flex items-center gap-3">
+                    <!-- Emblem SVG Merpati Putih Style -->
+                   <!-- Logo Perguruan Merpati Putih -->
+                    <!-- Logo Perguruan Merpati Putih -->
+                    <div class="w-12 h-12 flex items-center justify-center shrink-0">
+                      <img src="LogoMp.png" alt="Logo Merpati Putih" class="w-full h-full object-contain">
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-mp-red text-white">PPS BETAKO</span>
+                            <span class="text-xs font-semibold text-amber-400">E-UKT SYSTEM</span>
+                        </div>
+                        <h1 class="font-display font-extrabold text-lg sm:text-xl tracking-tight text-white leading-tight">
+                            MERPATI PUTIH
+                        </h1>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Role Switcher Tabs -->
+            <nav class="flex bg-slate-800/90 p-1 rounded-xl border border-slate-700 w-full md:w-auto">
+                <button onclick="switchMode('penguji')" id="tabPenguji" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-mp-red text-white shadow">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                    <span>Mode Penguji</span>
+                </button>
+                <button onclick="switchMode('admin')" id="tabAdmin" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Mode Admin</span>
+                    <span id="adminBadgeCount" class="ml-1 bg-amber-500 text-slate-950 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-6">
+
+        <!-- ==================== MODE PENGUJI ==================== -->
+        <section id="viewPenguji" class="space-y-6">
+            
+            <!-- Card Identitas Penguji & Sesi -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 mb-4 border-b border-slate-100">
+                    <div>
+                        <h2 class="font-display font-bold text-lg text-slate-900 flex items-center gap-2">
+                            <span class="w-2 h-6 bg-mp-red rounded-full inline-block"></span>
+                            Identitas Penguji & Gelombang Ujian
+                        </h2>
+                        <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Isi data penguji lapangan. Anda dapat menilai hingga 4 anggota sekaligus dalam satu sesi.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="loadSamplePaperData()" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            Muat Contoh Blangko
+                        </button>
+                        <button onclick="openResetConfirm()" class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            Reset Form
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Nama Penguji *</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                                <i class="fa-solid fa-user-tie"></i>
+                            </span>
+                            <input type="text" id="examinerName" oninput="saveSessionDraft()" placeholder="Contoh: Mas Budi Santoso" class="w-full pl-9 pr-3 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-mp-red focus:border-mp-red outline-none transition">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Kolat / Cabang *</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                                <i class="fa-solid fa-location-dot"></i>
+                            </span>
+                            <input type="text" id="examinerKolat" oninput="saveSessionDraft()" placeholder="Contoh: Cabang Jakarta Selatan" class="w-full pl-9 pr-3 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-mp-red focus:border-mp-red outline-none transition">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Tanggal Ujian *</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                                <i class="fa-solid fa-calendar-days"></i>
+                            </span>
+                            <input type="date" id="examDate" onchange="saveSessionDraft()" class="w-full pl-9 pr-3 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-mp-red focus:border-mp-red outline-none transition">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Multi-Peserta Switcher (1 - 4 Peserta) -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-900 text-white px-4 sm:px-6 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-users text-amber-400"></i>
+                        <span class="font-display font-bold text-sm sm:text-base">Daftar Peserta Ujian (Maks. 4 Anggota / Sesi)</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="addParticipantSlot()" id="btnAddSlot" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition">
+                            <i class="fa-solid fa-plus"></i> Tambah Slot Peserta
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Participant Tabs -->
+                <div id="participantTabs" class="grid grid-cols-2 lg:grid-cols-4 bg-slate-100 border-b border-slate-200 p-2 gap-2">
+                    <!-- Rendered dynamically -->
+                </div>
+
+                <!-- Active Participant Metadata Form -->
+                <div class="p-4 sm:p-6 bg-red-50/40 border-b border-slate-200">
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-end">
+                        <div class="sm:col-span-5">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                                Nama Lengkap Anggota (Peserta #<span id="activeSlotNumber">1</span>) *
+                            </label>
+                            <input type="text" id="memberName" oninput="updateActiveMemberMeta()" placeholder="Masukkan nama anggota..." class="w-full px-3.5 py-2.5 text-sm font-medium bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-mp-red focus:border-mp-red outline-none">
+                        </div>
+                        <div class="sm:col-span-3">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                                Nomor Ujian / NIA
+                            </label>
+                            <input type="text" id="memberExamNo" oninput="updateActiveMemberMeta()" placeholder="Contoh: MP-2026-014" class="w-full px-3.5 py-2.5 text-sm font-medium bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-mp-red focus:border-mp-red outline-none">
+                        </div>
+                        <div class="sm:col-span-4">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                                Tingkatan Saat Ini *
+                            </label>
+                            <select id="memberLevel" onchange="updateActiveMemberMeta()" class="w-full px-3.5 py-2.5 text-sm font-medium bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-mp-red focus:border-mp-red outline-none">
+                                <option value="Dasar I">Dasar I (Sabuk Putih)</option>
+                                <option value="Dasar II">Dasar II (Sabuk Merah Polos)</option>
+                                <option value="Balik I">Balik I (Sabuk Merah Bet Kecil)</option>
+                                <option value="Balik II">Balik II (Sabuk Merah Strip merah)</option>
+                                <option value="Kombinasi I">Kombinasi I (Sabuk Merah Strip Jingga)</option>
+                                <option value="Kombinasi II">Kombinasi II (Sabuk Merah Strip Kuning )</option>
+                                <option value="Khususan">Khususan</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scoring Table Header Info -->
+                <div class="px-4 sm:px-6 py-3 bg-white flex flex-wrap items-center justify-between gap-2 border-b border-slate-200">
+                    <div class="flex items-center gap-2 text-xs text-slate-600">
+                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-100 text-mp-red font-bold">!</span>
+                        <span>Skala penilaian <strong>0 - 10</strong> (mendukung desimal, misal <strong>7.5</strong>). Kosongkan / isi <strong>0</strong> jika materi tidak diujikan pada tingkatan ini.</span>
+                    </div>
+                    <div class="text-xs font-semibold text-slate-700 bg-slate-100 px-3 py-1 rounded-lg">
+                        Materi Aktif Dinilai: <span id="activeCriteriaCount" class="text-mp-red font-bold">0</span> / 13 Kriteria
+                    </div>
+                </div>
+
+                <!-- Blangko Table Wrapper (Responsive Horizontal Scroll on Mobile) -->
+                <div class="overflow-x-auto">
+                    <table class="w-full blangko-table border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-800 text-white text-xs uppercase tracking-wider">
+                                <th rowspan="2" class="py-3 px-2 text-center w-10">NO</th>
+                                <th rowspan="2" class="py-3 px-3 text-left min-w-[210px]">KRITERIA PENILAIAN</th>
+                                <th colspan="6" class="py-2 px-3 text-center bg-mp-red text-white font-display font-bold text-xs sm:text-sm">
+                                    KEMAMPUAN PENGUASAAN MATERI
+                                </th>
+                            </tr>
+                            <tr class="bg-slate-700 text-white text-[11px] sm:text-xs leading-tight">
+                                <th class="py-2.5 px-2 text-center w-24 sm:w-28">PENGUASAAN<br>UNSUR GERAK</th>
+                                <th class="py-2.5 px-2 text-center w-24 sm:w-28">STAMINA</th>
+                                <th class="py-2.5 px-2 text-center w-24 sm:w-28">KOORDINASI &<br>IRAMA GERAK</th>
+                                <th class="py-2.5 px-2 text-center w-24 sm:w-28">KEMANTAPAN<br>GERAK</th>
+                                <th class="py-2.5 px-2 text-center w-20 bg-slate-900 text-amber-300">NILAI</th>
+                                <th class="py-2.5 px-2 text-center w-24 bg-slate-900 text-emerald-300">NILAI<br>RATA-RATA</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scoringTableBody" class="divide-y divide-slate-200 bg-white">
+                            <!-- 13 rows rendered by JS -->
+                        </tbody>
+                        <tfoot class="bg-slate-50 font-bold text-slate-900 border-t-2 border-slate-400">
+                            <tr>
+                                <td colspan="2" class="py-3 px-4 text-left font-display text-sm uppercase tracking-wide bg-slate-100">
+                                    JUMLAH NILAI <span class="text-xs font-normal text-slate-500 lowercase">(total rata-rata materi aktif)</span>
+                                </td>
+                                <td colspan="5" class="py-3 px-3 text-right text-xs text-slate-500 bg-slate-100">
+                                    Dihitung dari <span id="footerActiveCount" class="font-bold text-slate-800">0</span> materi yang dinilai
+                                </td>
+                                <td id="footerJumlahNilai" class="py-3 px-2 text-center text-base font-display text-slate-900 bg-amber-50">
+                                    0
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" class="py-3 px-4 text-left font-display text-sm uppercase tracking-wide bg-slate-100">
+                                    NILAI RATA - RATA AKHIR
+                                </td>
+                                <td colspan="5" class="py-3 px-3 text-right bg-slate-100">
+                                    <span id="footerStatusBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-200 text-slate-600">
+                                        BELUM ADA NILAI
+                                    </span>
+                                </td>
+                                <td id="footerNilaiAkhir" class="py-3 px-2 text-center text-lg font-display font-extrabold text-mp-red bg-red-50">
+                                    0
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Action Bar Submit -->
+                <div class="p-4 sm:p-6 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="text-xs sm:text-sm text-slate-600">
+                        Standar Kelulusan (KKM) saat ini: <strong id="displayKkmInfo" class="text-mp-red">7.00</strong>. 
+                        Pastikan nama penguji dan nama anggota sudah diisi sebelum mengirim.
+                    </div>
+                    <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
+                        <button onclick="submitSingleParticipant()" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-mp-red hover:bg-mp-darkred text-white font-semibold text-sm shadow-md shadow-red-600/20 transition">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Kirim Nilai Peserta Ini</span>
+                        </button>
+                        <button onclick="submitAllParticipants()" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm shadow-md transition">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Kirim Semua Sesi (<span id="btnAllCount">1</span>)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== MODE ADMIN / DEWAN PENGUJI ==================== -->
+        <section id="viewAdmin" class="hidden space-y-6">
+            
+            <!-- Top Admin Header & KKM Config -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div>
+                    <h2 class="font-display font-bold text-xl text-slate-900 flex items-center gap-2">
+                        <span class="w-2.5 h-6 bg-mp-red rounded-full inline-block"></span>
+                        Rekapitulasi Hasil Ujian Kelayakan Kolat (Admin)
+                    </h2>
+                    <p class="text-sm text-slate-500 mt-0.5">Pantau kelayakan kenaikan tingkat anggota, cetak/export PDF blangko resmi, atau unduh laporan rekap.</p>
+                </div>
+
+                <!-- KKM Setting & Export -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="flex items-center gap-2 bg-slate-100 px-3 py-2 rounded-xl border border-slate-200">
+                        <label for="kkmInput" class="text-xs font-bold text-slate-700 uppercase">Standar Lulus (KKM):</label>
+                        <input type="number" id="kkmInput" step="0.1" min="1" max="10" value="7.0" onchange="updateKkmSetting(this.value)" class="w-16 px-2 py-1 text-sm font-bold text-center bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-mp-red outline-none">
+                    </div>
+                    <button onclick="exportAllBlangkoToPDF()" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-mp-red hover:bg-mp-darkred text-white text-xs sm:text-sm font-semibold shadow-sm transition">
+                        <i class="fa-solid fa-file-pdf"></i>
+                        <span>Export Semua Blangko PDF</span>
+                    </button>
+                    <button onclick="exportToCSV()" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold shadow-sm transition">
+                        <i class="fa-solid fa-file-excel"></i>
+                        <span>Export CSV / Excel</span>
+                    </button>
+                    <button onclick="openClearAdminConfirm()" class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-mp-red border border-red-200 text-xs sm:text-sm font-semibold transition">
+                        <i class="fa-solid fa-trash-can"></i>
+                        <span>Hapus Semua</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Summary Statistics Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase">Total Peserta Diuji</p>
+                        <p id="statTotal" class="text-2xl font-display font-extrabold text-slate-900">0</p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-award"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase">Layak Naik Tingkat</p>
+                        <p id="statLulus" class="text-2xl font-display font-extrabold text-emerald-600">0</p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-red-100 text-mp-red flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase">Belum Layak / Mengulang</p>
+                        <p id="statTidakLulus" class="text-2xl font-display font-extrabold text-mp-red">0</p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase">Rata-Rata Keseluruhan</p>
+                        <p id="statAvgAll" class="text-2xl font-display font-extrabold text-slate-900">0.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter & Search Bar -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col sm:flex-row gap-3">
+                <div class="relative flex-grow">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="adminSearch" oninput="renderAdminTable()" placeholder="Cari nama anggota, nomor ujian, atau nama penguji..." class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-mp-red outline-none">
+                </div>
+                <select id="adminFilterLevel" onchange="renderAdminTable()" class="px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-mp-red outline-none">
+                    <option value="">Semua Tingkatan</option>
+                    <option value="Dasar I">Dasar I</option>
+                    <option value="Dasar II">Dasar II</option>
+                    <option value="Balik I">Balik I</option>
+                    <option value="Balik II">Balik II</option>
+                    <option value="Kombinasi I">Kombinasi I</option>
+                    <option value="Kombinasi II">Kombinasi II</option>
+                    <option value="Khususan">Khususan</option>
+                </select>
+                <select id="adminFilterStatus" onchange="renderAdminTable()" class="px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-mp-red outline-none">
+                    <option value="">Semua Status</option>
+                    <option value="LULUS">Layak Naik Tingkat</option>
+                    <option value="TIDAK_LULUS">Belum Layak</option>
+                </select>
+            </div>
+
+            <!-- Recap Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-900 text-white text-xs uppercase tracking-wider">
+                                <th class="py-3.5 px-4">No</th>
+                                <th class="py-3.5 px-4">Peserta & No. Ujian</th>
+                                <th class="py-3.5 px-4">Tingkatan</th>
+                                <th class="py-3.5 px-4">Penguji & Kolat</th>
+                                <th class="py-3.5 px-4 text-center">Materi Aktif</th>
+                                <th class="py-3.5 px-4 text-center">Jumlah Nilai</th>
+                                <th class="py-3.5 px-4 text-center">Rata-Rata Akhir</th>
+                                <th class="py-3.5 px-4 text-center">Status Kelayakan</th>
+                                <th class="py-3.5 px-4 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminTableBody" class="divide-y divide-slate-200">
+                            <!-- Rendered dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="adminEmptyState" class="hidden py-12 px-4 text-center">
+                    <div class="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3 text-2xl">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </div>
+                    <h3 class="font-display font-bold text-slate-800 text-base">Belum Ada Data Penilaian Masuk</h3>
+                    <p class="text-sm text-slate-500 mt-1 max-w-md mx-auto">Silakan masuk ke <strong>Mode Penguji</strong>, isi penilaian anggota, lalu klik tombol <strong>Kirim Nilai</strong> untuk melihat rekapitulasi di sini.</p>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-8 no-print">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
+            Sistem Penilaian Digital Ujian Kelayakan kolat (UKK) &bull; <strong>Perguruan Pencak Silat Beladiri Tangan Kosong Merpati Putih</strong>
+        </div>
+    </footer>
+
+    <!-- ==================== MODAL DETAIL BLANGKO (PRINTABLE & EXPORT PDF) ==================== -->
+    <div id="blangkoModal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] flex flex-col overflow-hidden">
+            <!-- Modal Header -->
+            <div class="px-5 py-3.5 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-2 no-print">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-file-lines text-amber-400"></i>
+                    <span class="font-display font-bold text-sm sm:text-base">Blangko Resmi Penilaian UKK Merpati Putih</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="downloadCurrentBlangkoPDF()" id="btnDownloadSinglePdf" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow">
+                        <i class="fa-solid fa-file-pdf"></i> Export PDF
+                    </button>
+                    <button onclick="window.print()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-mp-red hover:bg-mp-darkred text-white text-xs font-semibold transition">
+                        <i class="fa-solid fa-print"></i> Cetak / Print
+                    </button>
+                    <button onclick="closeBlangkoModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Printable Content Area -->
+            <div id="printArea" class="p-5 sm:p-8 overflow-y-auto bg-white text-slate-900">
+                <!-- Kop Blangko -->
+                <div class="border-b-2 border-slate-900 pb-3 mb-4 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold tracking-widest uppercase text-mp-red">PERGURUAN PENCAK SILAT BELADIRI TANGAN KOSONG</p>
+                        <h3 class="font-display font-extrabold text-xl sm:text-2xl tracking-tight text-slate-900">MERPATI PUTIH</h3>
+                        <p class="text-xs text-slate-600 font-medium">BLANGKO PENILAIAN UJIAN KELAYAKAN KOLAT (UKK)</p>
+                    </div>
+                    <div class="text-right text-xs">
+                        <span id="modalPrintBadge" class="inline-block px-3 py-1 rounded border font-bold uppercase"></span>
+                    </div>
+                </div>
+
+                <!-- Identitas Peserta & Penguji -->
+                <div class="grid grid-cols-2 gap-x-6 gap-y-1.5 text-xs sm:text-sm mb-4 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                    <div class="flex justify-between border-b border-slate-200 pb-1">
+                        <span class="text-slate-500">Nama Anggota:</span>
+                        <strong id="modalMemberName" class="text-slate-900">-</strong>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-200 pb-1">
+                        <span class="text-slate-500">Nama Penguji:</span>
+                        <strong id="modalExaminerName" class="text-slate-900">-</strong>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-200 pb-1">
+                        <span class="text-slate-500">No. Ujian / NIA:</span>
+                        <strong id="modalMemberNo" class="text-slate-900">-</strong>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-200 pb-1">
+                        <span class="text-slate-500">Kolat / Cabang:</span>
+                        <strong id="modalKolat" class="text-slate-900">-</strong>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Tingkatan:</span>
+                        <strong id="modalLevel" class="text-slate-900">-</strong>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Tanggal Ujian:</span>
+                        <strong id="modalDate" class="text-slate-900">-</strong>
+                    </div>
+                </div>
+
+                <!-- Tabel Blangko Persis Gambar -->
+                <table class="w-full blangko-print-table border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-slate-100 font-bold text-slate-900">
+                            <th rowspan="2" class="py-2 px-1.5 text-center w-8">NO</th>
+                            <th rowspan="2" class="py-2 px-2.5 text-left">KRITERIA PENILAIAN</th>
+                            <th colspan="6" class="py-1.5 px-2 text-center">KEMAMPUAN PENGUASAAN MATERI</th>
+                        </tr>
+                        <tr class="bg-slate-100 font-bold text-[10px] sm:text-xs text-slate-900">
+                            <th class="py-1.5 px-1 text-center w-20">PENGUASAAN<br>UNSUR GERAK</th>
+                            <th class="py-1.5 px-1 text-center w-16">STAMINA</th>
+                            <th class="py-1.5 px-1 text-center w-20">KOORDINASI &<br>IRAMA GERAK</th>
+                            <th class="py-1.5 px-1 text-center w-20">KEMANTAPAN<br>GERAK</th>
+                            <th class="py-1.5 px-1 text-center w-16">NILAI</th>
+                            <th class="py-1.5 px-1 text-center w-20">NILAI<br>RATA - RATA</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalTableBody">
+                        <!-- Rendered dynamically -->
+                    </tbody>
+                    <tfoot class="font-bold bg-slate-50">
+                        <tr>
+                            <td colspan="2" class="py-2 px-2.5 text-left">JUMLAH NILAI</td>
+                            <td colspan="5" class="py-2 px-2 text-right text-[11px] font-normal text-slate-600">
+                                Total rata-rata dari <span id="modalActiveCount">0</span> kriteria diujikan
+                            </td>
+                            <td id="modalJumlahNilai" class="py-2 px-1 text-center text-sm">0</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" class="py-2 px-2.5 text-left">NILAI RATA - RATA</td>
+                            <td colspan="5" class="py-2 px-2 text-right text-[11px] font-normal text-slate-600">
+                                Standar Kelulusan (KKM): <span id="modalKkmVal">7.0</span>
+                            </td>
+                            <td id="modalNilaiAkhir" class="py-2 px-1 text-center text-sm font-extrabold">0</td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <!-- Tanda Tangan Penguji -->
+                <div class="mt-6 grid grid-cols-2 gap-8 text-xs text-center">
+                    <div>
+                        <p class="text-slate-600">Mengetahui,</p>
+                        <p class="font-bold text-slate-800">Dewan Penguji / Pembina </p>
+                        <div class="h-14"></div>
+                        <p class="font-semibold underline">( ........................................ )</p>
+                    </div>
+                    <div>
+                        <p class="text-slate-600">Penguji Lapangan,</p>
+                        <p class="font-bold text-slate-800">Pelatih / Penguji </p>
+                        <div class="h-14"></div>
+                        <p id="modalSignExaminer" class="font-bold underline">( ........................................ )</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== CUSTOM CONFIRMATION DIALOG ==================== -->
+    <div id="confirmModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-red-100 text-mp-red flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <h3 id="confirmTitle" class="font-display font-bold text-slate-900 text-base">Konfirmasi</h3>
+                    <p id="confirmMessage" class="text-xs sm:text-sm text-slate-600 mt-0.5">Apakah Anda yakin?</p>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeConfirmModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold transition">
+                    Batal
+                </button>
+                <button id="confirmActionBtn" class="px-4 py-2 rounded-xl bg-mp-red hover:bg-mp-darkred text-white text-xs sm:text-sm font-semibold transition">
+                    Ya, Lanjutkan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Container Tersembunyi untuk Batch Export Semua Blangko PDF -->
+    <div id="batchPdfContainer" class="hidden"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

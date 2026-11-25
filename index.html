@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-UKT MERPATI PUTIH</title>
+    <title>Sistem Penilaian UKT - PPS Betako Merpati Putih</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome Icons -->
@@ -48,9 +48,7 @@
             <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
                 <div class="flex items-center gap-3">
                     <!-- Emblem SVG Merpati Putih Style -->
-                   <!-- Logo Perguruan Merpati Putih -->
-                    <!-- Logo Perguruan Merpati Putih -->
-                    <div class="w-12 h-12 flex items-center justify-center shrink-0">
+                     <div class="w-12 h-12 flex items-center justify-center shrink-0">
                       <img src="LogoMp.png" alt="Logo Merpati Putih" class="w-full h-full object-contain">
                     </div>
                     <div>
@@ -77,6 +75,10 @@
                     <span id="adminBadgeCount" class="ml-1 bg-amber-500 text-slate-950 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
                 </button>
             </nav>
+            <button onclick="openCloudConfigModal()" id="cloudStatusBadge" title="Klik untuk mengatur koneksi Google Sheets Cloud" class="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition cursor-pointer">
+                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                <span>Mode Lokal (Atur Cloud)</span>
+            </button>
         </div>
     </header>
 
@@ -161,29 +163,35 @@
                 <!-- Active Participant Metadata Form -->
                 <div class="p-4 sm:p-6 bg-red-50/40 border-b border-slate-200">
                     <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-end">
-                        <div class="sm:col-span-5">
+                        <div class="sm:col-span-4">
                             <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
                                 Nama Lengkap Anggota (Peserta #<span id="activeSlotNumber">1</span>) *
                             </label>
                             <input type="text" id="memberName" oninput="updateActiveMemberMeta()" placeholder="Masukkan nama anggota..." class="w-full px-3.5 py-2.5 text-sm font-medium bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-mp-red focus:border-mp-red outline-none">
                         </div>
-                        <div class="sm:col-span-3">
+                        <div class="sm:col-span-2">
                             <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
                                 Nomor Ujian / NIA
                             </label>
                             <input type="text" id="memberExamNo" oninput="updateActiveMemberMeta()" placeholder="Contoh: MP-2026-014" class="w-full px-3.5 py-2.5 text-sm font-medium bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-mp-red focus:border-mp-red outline-none">
                         </div>
-                        <div class="sm:col-span-4">
+                        <div class="sm:col-span-3">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                                Kolat *
+                            </label>
+                            <input type="text" id="memberKolat" oninput="updateActiveMemberMeta()" placeholder="Asal kolat anggota..." class="w-full px-3.5 py-2.5 text-sm font-medium bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-mp-red focus:border-mp-red outline-none">
+                        </div>
+                        <div class="sm:col-span-3">
                             <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
                                 Tingkatan Saat Ini *
                             </label>
                             <select id="memberLevel" onchange="updateActiveMemberMeta()" class="w-full px-3.5 py-2.5 text-sm font-medium bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-mp-red focus:border-mp-red outline-none">
                                 <option value="Dasar I">Dasar I (Sabuk Putih)</option>
                                 <option value="Dasar II">Dasar II (Sabuk Merah Polos)</option>
-                                <option value="Balik I">Balik I (Sabuk Merah Bet Kecil)</option>
-                                <option value="Balik II">Balik II (Sabuk Merah Strip merah)</option>
-                                <option value="Kombinasi I">Kombinasi I (Sabuk Merah Strip Jingga)</option>
-                                <option value="Kombinasi II">Kombinasi II (Sabuk Merah Strip Kuning )</option>
+                                <option value="Balik I">Balik I (Sabuk Merah Strip Putih 1)</option>
+                                <option value="Balik II">Balik II (Sabuk Merah Strip Putih 2)</option>
+                                <option value="Kombinasi I">Kombinasi I (Sabuk Merah Strip Kuning 1)</option>
+                                <option value="Kombinasi II">Kombinasi II (Sabuk Merah Strip Kuning 2)</option>
                                 <option value="Khususan">Khususan</option>
                             </select>
                         </div>
@@ -281,13 +289,17 @@
                 <div>
                     <h2 class="font-display font-bold text-xl text-slate-900 flex items-center gap-2">
                         <span class="w-2.5 h-6 bg-mp-red rounded-full inline-block"></span>
-                        Rekapitulasi Hasil Ujian Kelayakan Kolat (Admin)
+                        Rekapitulasi Hasil Ujian Kenaikan Tingkat (Admin)
                     </h2>
                     <p class="text-sm text-slate-500 mt-0.5">Pantau kelayakan kenaikan tingkat anggota, cetak/export PDF blangko resmi, atau unduh laporan rekap.</p>
                 </div>
 
                 <!-- KKM Setting & Export -->
                 <div class="flex flex-wrap items-center gap-3">
+                    <button onclick="syncFromGoogleSheets(true)" id="btnSyncCloud" class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs sm:text-sm font-semibold shadow-sm transition" title="Tarik data terbaru dari Google Sheets">
+                        <i class="fa-solid fa-cloud-arrow-down" id="syncIcon"></i>
+                        <span>Sinkronkan Cloud</span>
+                    </button>
                     <div class="flex items-center gap-2 bg-slate-100 px-3 py-2 rounded-xl border border-slate-200">
                         <label for="kkmInput" class="text-xs font-bold text-slate-700 uppercase">Standar Lulus (KKM):</label>
                         <input type="number" id="kkmInput" step="0.1" min="1" max="10" value="7.0" onchange="updateKkmSetting(this.value)" class="w-16 px-2 py-1 text-sm font-bold text-center bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-mp-red outline-none">
@@ -409,7 +421,7 @@
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 py-4 mt-8 no-print">
         <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
-            Sistem Penilaian Digital Ujian Kelayakan kolat (UKK) &bull; <strong>Perguruan Pencak Silat Beladiri Tangan Kosong Merpati Putih</strong>
+            Sistem Penilaian Digital Ujian Kenaikan Tingkat (UKT) &bull; <strong>Perguruan Pencak Silat Beladiri Tangan Kosong Merpati Putih</strong>
         </div>
     </footer>
 
@@ -420,7 +432,7 @@
             <div class="px-5 py-3.5 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-2 no-print">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-file-lines text-amber-400"></i>
-                    <span class="font-display font-bold text-sm sm:text-base">Blangko Resmi Penilaian UKK Merpati Putih</span>
+                    <span class="font-display font-bold text-sm sm:text-base">Blangko Resmi Penilaian UKT Merpati Putih</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <button onclick="downloadCurrentBlangkoPDF()" id="btnDownloadSinglePdf" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow">
@@ -442,7 +454,7 @@
                     <div>
                         <p class="text-xs font-bold tracking-widest uppercase text-mp-red">PERGURUAN PENCAK SILAT BELADIRI TANGAN KOSONG</p>
                         <h3 class="font-display font-extrabold text-xl sm:text-2xl tracking-tight text-slate-900">MERPATI PUTIH</h3>
-                        <p class="text-xs text-slate-600 font-medium">BLANGKO PENILAIAN UJIAN KELAYAKAN KOLAT (UKK)</p>
+                        <p class="text-xs text-slate-600 font-medium">BLANGKO PENILAIAN UJIAN KENAIKAN TINGKAT (UKT)</p>
                     </div>
                     <div class="text-right text-xs">
                         <span id="modalPrintBadge" class="inline-block px-3 py-1 rounded border font-bold uppercase"></span>
@@ -467,13 +479,21 @@
                         <span class="text-slate-500">Kolat / Cabang:</span>
                         <strong id="modalKolat" class="text-slate-900">-</strong>
                     </div>
+                    <div class="flex justify-between border-b border-slate-200 pb-1">
+                        <span class="text-slate-500">Kolat Anggota:</span>
+                        <strong id="modalMemberKolat" class="text-slate-900">-</strong>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-200 pb-1">
+                        <span class="text-slate-500">Tanggal Ujian:</span>
+                        <strong id="modalDate" class="text-slate-900">-</strong>
+                    </div>
                     <div class="flex justify-between">
                         <span class="text-slate-500">Tingkatan:</span>
                         <strong id="modalLevel" class="text-slate-900">-</strong>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-slate-500">Tanggal Ujian:</span>
-                        <strong id="modalDate" class="text-slate-900">-</strong>
+                        <span class="text-slate-500">Standar KKM:</span>
+                        <strong id="modalHeaderKkm" class="text-slate-900">-</strong>
                     </div>
                 </div>
 
@@ -519,13 +539,13 @@
                 <div class="mt-6 grid grid-cols-2 gap-8 text-xs text-center">
                     <div>
                         <p class="text-slate-600">Mengetahui,</p>
-                        <p class="font-bold text-slate-800">Dewan Penguji / Pembina </p>
+                        <p class="font-bold text-slate-800">Dewan Penguji / Ketua Cabang</p>
                         <div class="h-14"></div>
                         <p class="font-semibold underline">( ........................................ )</p>
                     </div>
                     <div>
                         <p class="text-slate-600">Penguji Lapangan,</p>
-                        <p class="font-bold text-slate-800">Pelatih / Penguji </p>
+                        <p class="font-bold text-slate-800">Pelatih / Penguji UKT</p>
                         <div class="h-14"></div>
                         <p id="modalSignExaminer" class="font-bold underline">( ........................................ )</p>
                     </div>
@@ -552,6 +572,39 @@
                 </button>
                 <button id="confirmActionBtn" class="px-4 py-2 rounded-xl bg-mp-red hover:bg-mp-darkred text-white text-xs sm:text-sm font-semibold transition">
                     Ya, Lanjutkan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL PENGATURAN CLOUD GOOGLE SHEETS ==================== -->
+    <div id="cloudConfigModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center">
+                        <i class="fa-solid fa-cloud"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-display font-bold text-slate-900 text-base">Koneksi Cloud Google Sheets</h3>
+                        <p class="text-xs text-slate-500">Hubungkan aplikasi agar nilai semua penguji masuk ke 1 database</p>
+                    </div>
+                </div>
+                <button onclick="closeCloudConfigModal()" class="text-slate-400 hover:text-slate-700">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-2">
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">URL Web App Google Apps Script</label>
+                <input type="url" id="cloudApiUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none">
+                <p class="text-[11px] text-slate-500">Tempelkan URL berakhiran <strong>/exec</strong> dari hasil Deploy Google Apps Script Anda.</p>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeCloudConfigModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold transition">
+                    Batal
+                </button>
+                <button onclick="saveCloudApiUrl()" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs sm:text-sm font-semibold transition">
+                    Simpan & Hubungkan
                 </button>
             </div>
         </div>

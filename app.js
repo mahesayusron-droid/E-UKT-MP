@@ -17,7 +17,7 @@
 
         // ==================== KONFIGURASI GOOGLE SHEETS CLOUD ====================
         // Anda bisa menempelkan URL Web App di bawah ini ATAU langsung lewat tombol "Mode Lokal (Atur Cloud)" di website
-        const DEFAULT_GOOGLE_SHEET_API_URL = "";
+        const DEFAULT_GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzDvwS8FzQUfhH9EDGxOhZQzXEDJkTHFjRCR3Pe3Mwy0zi1ETMKrmRsHTFr56h_7tny/exec";
         const STORAGE_KEY_CLOUD_URL = 'mp_ukt_cloud_api_url_v1';
         let GOOGLE_SHEET_API_URL = localStorage.getItem(STORAGE_KEY_CLOUD_URL) || DEFAULT_GOOGLE_SHEET_API_URL;
 
